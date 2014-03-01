@@ -27,6 +27,13 @@ class TCPClient {
 	private DataOutputStream outToServer;
 	private BufferedReader inFromServer,inFromUser;
 	private Socket clientSocket;
+	/**
+	 * 
+	 * @param server
+	 * @param port
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public TCPClient(String server, Integer port) throws UnknownHostException, IOException{
 		this.inFromUser = new BufferedReader(new InputStreamReader(
 				System.in));
