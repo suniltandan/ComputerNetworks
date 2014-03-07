@@ -44,12 +44,13 @@ class TCPClient {
 		this.inFromServer = new BufferedReader(new InputStreamReader(
 				clientSocket.getInputStream()));
 	}
+	boolean closeConnection=false;
 	/**
 	 * 
 	 * @throws IOException
 	 */
 	public void startClient() throws IOException {
-		boolean closeConnection=false;
+		
 		while(!closeConnection){
 			String sentence = inFromUser.readLine();
 			if(sentence.contains("HTTP/1.0")){
@@ -81,7 +82,7 @@ class TCPClient {
 	 * @throws IOException
 	 */
 	private void handleHTTP11(String sentence) throws IOException {
-		outToServer.writeBytes(sentence+'\n' +'\n'+"Host: www.google.com" +'\n');
+		outToServer.writeBytes(sentence+'\n' +'\n'+"Host: kissmyass.com" +'\n');
 		outToServer.flush();
 		
 		
@@ -97,6 +98,7 @@ class TCPClient {
 			fullResponse += "\n"+response;
 		}
 		System.out.println("FROM SERVER: " + fullResponse);
+		System.out.println("Connection Status :" + !(clientSocket.isClosed()));
 		
 	}
 	

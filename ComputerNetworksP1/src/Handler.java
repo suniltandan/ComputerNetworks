@@ -15,10 +15,22 @@ class Handler implements Runnable {
 		try {
 			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+			
 			String clientSentence = inFromClient.readLine();
+			while(clientSentence!=null){
 			System.out.println("Received: " + clientSentence);
-			String capsSentence = clientSentence.toUpperCase() + '\n';
-			outToClient.writeBytes(capsSentence);
+			clientSentence = inFromClient.readLine();
+			}
+			PrintWriter out = new PrintWriter(connectionSocket.getOutputStream());
+			  out.println("HTTP/1.1 200 OK");
+			    out.println("Content-Type: text/html");
+			    out.println("\r\n");
+			    out.println("<p> Hello world </p>");
+			    out.flush();
+
+			    out.close();
+			//String capsSentence = clientSentence.toUpperCase() + '\n';
+			//outToClient.writeBytes(capsSentence);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
