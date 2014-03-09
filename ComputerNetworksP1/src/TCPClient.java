@@ -91,8 +91,7 @@ class TCPClient {
 			outToServer.flush();
 			handleResponse("HEAD", Protocol);
 		} else if (sentence.contains("GET")) {
-			outToServer.writeBytes(sentence + '\n' + '\n');
-			outToServer.flush();
+			getMethod(s[2], false, Protocol);
 			handleResponse("GET", Protocol);
 
 		} else if (sentence.contains("PUT")) {
@@ -103,6 +102,12 @@ class TCPClient {
 			System.out.println("Wrong HTTPCommand");
 		}
 
+	}
+	private void getMethod(String url, boolean isFile, String Protocol) throws IOException{
+		if(!isFile){
+			outToServer.writeBytes("GET"+url+" "+Protocol+ '\n' + '\n');
+			outToServer.flush();
+		}
 	}
 
 	/**
