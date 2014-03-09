@@ -134,16 +134,15 @@ class TCPClient {
 			if(isFile){
 				//stuur GET request naar server
 				outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n');
+				outToServer.flush();
 				// verwerk response
 				
 				String response = inFromServer.readLine();
 				String fullResponse = "";
-				while (inFromServer.ready()) {
-					
-					response = inFromServer.readLine();
-					fullResponse += "\n" + response;
+				while ((response=inFromServer.readLine())!=null){
+					fullResponse += "\n"+response;
 				}
-				
+				System.out.print(fullResponse);
 				fullResponse = fullResponse.replaceAll("(.*)(\\n)", "");
 				byte[] b = fullResponse.getBytes();
 				
