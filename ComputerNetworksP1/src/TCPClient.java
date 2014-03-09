@@ -1,5 +1,8 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import test.HttpTester;
 
@@ -165,7 +168,8 @@ class TCPClient {
 				break;
 
 			case "GET":
-
+				
+				
 				System.out.println(fullResponse);
 				break;
 
@@ -176,6 +180,25 @@ class TCPClient {
 		}
 		
 
+	}
+	
+	private ArrayList<String> getImgLinks(String html){
+		Pattern p = Pattern.compile("<img src=\"'(.*?)'\"");
+		Matcher m = p.matcher(html);
+		Matcher m2 ;
+		Pattern p2 = Pattern.compile("(\")(.*)(\")");
+		ArrayList<String> imgList = new ArrayList<String>();
+
+		// links naar images worden opgeslagen in arraylist imgList
+		while(m.find()) {
+			String s = m.group();
+			m2 = p2.matcher(s);
+			while(m2.find()){
+				imgList.add(m2.group().replaceAll("(\")", ""));
+			}
+		}
+		return imgList;
+		
 	}
 
 }
