@@ -34,6 +34,7 @@ class TCPClient {
 	public BufferedReader inFromServer, inFromUser;
 	private Socket clientSocket;
 	private String server;
+	private int port;
 
 	/**
 	 * 
@@ -44,14 +45,30 @@ class TCPClient {
 	 */
 	public TCPClient(String server, Integer port) throws UnknownHostException,
 			IOException {
+		this.server = server;
+		this.port = port;
+		
 		this.inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		
+	}
+	
+	
+	
+	private void openConnection() throws UnknownHostException,IOException{
+		
 		this.clientSocket = new Socket(server, port);
 		System.out.println("Connection Established");
-		this.server = server;
 		this.outToServer = new DataOutputStream(clientSocket.getOutputStream());
 		this.inFromServer = new BufferedReader(new InputStreamReader(
 				clientSocket.getInputStream()));
 	}
+	
+	private void closeConnection() throws UnknownHostException, IOException{
+		this.clientSocket.close();
+		this.outToServer.close();
+		this.inFromServer.close();
+	}
+	
 
 	boolean closeConnection = false;
 
@@ -60,6 +77,7 @@ class TCPClient {
 	 * @throws IOException
 	 */
 	public void startClient() throws IOException {
+		openConnection();
 
 		while (!closeConnection) {
 			String sentence = inFromUser.readLine();
@@ -83,8 +101,7 @@ class TCPClient {
 		String Protocol = "HTTP/1.0";
 		String[] s = sentence.split(" ");
 		if (s.length != 3) {
-			System.out
-					.println("Invalid syntax: \n  <METHOD> <URL> <HTMLPROTOCOL>");
+			System.out.println("Invalid syntax: \n  <METHOD> <URL> <HTMLPROTOCOL>");
 			System.out.println(sentence);
 			return;
 		}
@@ -108,8 +125,34 @@ class TCPClient {
 	}
 	private void getMethod(String url, boolean isFile, String Protocol) throws IOException{
 		if(!isFile){
-			outToServer.writeBytes("GET"+url+" "+Protocol+ '\n' + '\n');
+			
+			if(!isFile){
+			outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
 			outToServer.flush();
+			}
+			
+			if(isFile){
+				//stuur GET request naar server
+				outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n');
+				// verwerk response
+				
+				String response = inFromServer.readLine();
+				String fullResponse = "";
+				while (inFromServer.ready()) {
+					
+					response = inFromServer.readLine();
+					fullResponse += "\n" + response;
+				}
+				
+				fullResponse = fullResponse.replaceAll("(.*)(\\n)", "");
+				byte[] b = fullResponse.getBytes();
+				
+				
+				//slaag image op
+				FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
+				fos.write(b);
+				fos.close();
+			}
 		}
 	}
 
@@ -156,9 +199,10 @@ class TCPClient {
 		try {
 			String response = inFromServer.readLine();
 			String fullResponse = "";
-			while (response!= null) {
-				fullResponse += "\n" + response;
+			while (inFromServer.ready()) {
+				
 				response = inFromServer.readLine();
+				fullResponse += "\n" + response;
 			}
 			System.out.println("OK");
 			switch (Method) {
@@ -171,6 +215,14 @@ class TCPClient {
 				
 				
 				System.out.println(fullResponse);
+				ArrayList<String> imgLink = getImgLinks(fullResponse);
+				closeConnection();
+				for(String s : imgLink){
+					openConnection();
+					getMethod(s, true, "1.0");
+					closeConnection();
+					}
+				
 				break;
 
 			}
