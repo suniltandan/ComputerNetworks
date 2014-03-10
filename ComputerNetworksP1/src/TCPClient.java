@@ -117,6 +117,11 @@ class TCPClient {
 		} else if (sentence.contains("PUT")) {
 
 		} else if (sentence.contains("POST")) {
+			System.out.print("geef content");
+			String content = inFromUser.readLine();
+			int length = content.length();
+			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
+			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
 
 		} else {
 			System.out.println("Wrong HTTPCommand");
@@ -133,7 +138,7 @@ class TCPClient {
 			
 			if(isFile){
 				//stuur GET request naar server
-				outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n');
+				outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n' +"Host:" + server+ '\n');
 				outToServer.flush();
 				// verwerk response
 				
@@ -143,7 +148,7 @@ class TCPClient {
 					fullResponse += "\n"+response;
 				}
 				System.out.print(fullResponse);
-				fullResponse = fullResponse.replaceAll("(.*)(\\n)", "");
+				fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
 				byte[] b = fullResponse.getBytes();
 				
 				
@@ -202,6 +207,7 @@ class TCPClient {
 				
 				response = inFromServer.readLine();
 				fullResponse += "\n" + response;
+
 			}
 			System.out.println("OK");
 			switch (Method) {
@@ -212,7 +218,7 @@ class TCPClient {
 
 			case "GET":
 				
-				
+
 				System.out.println(fullResponse);
 				ArrayList<String> imgLink = getImgLinks(fullResponse);
 				closeConnection();
