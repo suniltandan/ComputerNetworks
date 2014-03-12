@@ -147,11 +147,17 @@ class TCPClient {
 
 					String response = inFromServer.readLine();
 					String fullResponse = "";
-					while ((response=inFromServer.readLine())!=null){
-						fullResponse += "\n"+response;
+					boolean bodystarted =false;
+					while (inFromServer.ready()){
+						if(response.isEmpty())
+							bodystarted=true;
+						if(bodystarted)
+							fullResponse+=fullResponse;
+						response=inFromServer.readLine();
+						
 					}
 					System.out.print(fullResponse);
-					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
 					byte[] b = fullResponse.getBytes();
 
 
