@@ -111,6 +111,7 @@ class TCPClient {
 			outToServer.flush();
 			handleResponse("HEAD", Protocol);
 		} else if (sentence.contains("GET")) {
+			
 			getMethod(s[2], false, Protocol);
 			handleResponse("GET", Protocol);
 
@@ -129,33 +130,70 @@ class TCPClient {
 
 	}
 	private void getMethod(String url, boolean isFile, String Protocol) throws IOException{
-		if(!isFile){
-			
+		if(Protocol == "HTTP/1.0"){
+
 			if(!isFile){
-			outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
-			outToServer.flush();
-			}
-			
-			if(isFile){
-				//stuur GET request naar server
-				outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n' +"Host:" + server+ '\n');
-				outToServer.flush();
-				// verwerk response
-				
-				String response = inFromServer.readLine();
-				String fullResponse = "";
-				while ((response=inFromServer.readLine())!=null){
-					fullResponse += "\n"+response;
+
+				if(!isFile){
+					outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
+					outToServer.flush();
 				}
-				System.out.print(fullResponse);
-				fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
-				byte[] b = fullResponse.getBytes();
-				
-				
-				//slaag image op
-				FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
-				fos.write(b);
-				fos.close();
+
+				if(isFile){
+					//stuur GET request naar server
+					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n' +"Host:" + server+ '\n');
+					outToServer.flush();
+					// verwerk response
+
+					String response = inFromServer.readLine();
+					String fullResponse = "";
+					while ((response=inFromServer.readLine())!=null){
+						fullResponse += "\n"+response;
+					}
+					System.out.print(fullResponse);
+					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+					byte[] b = fullResponse.getBytes();
+
+
+					//slaag image op
+					FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
+					fos.write(b);
+					fos.close();
+				}
+			}
+		}
+		
+		//HTTP 1.1 :
+		else{
+			if(!isFile){
+
+				if(!isFile){
+					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
+					outToServer.flush();
+				}
+
+				if(isFile){
+					//stuur GET request naar server
+					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
+					outToServer.flush();
+					// verwerk response
+
+					String response = inFromServer.readLine();
+					String fullResponse = "";
+					while ((response=inFromServer.readLine())!=null){
+						fullResponse += "\n"+response;
+					}
+					System.out.print(fullResponse);
+					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+					byte[] b = fullResponse.getBytes();
+
+
+					//slaag image op
+					FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
+					fos.write(b);
+					fos.close();
+				}
+
 			}
 		}
 	}
@@ -179,12 +217,16 @@ class TCPClient {
 			System.out.println(sentence);
 			outToServer.flush();
 			handleResponse("HEAD", "HTTP/1.1");
-		} else if (sentence.contains("GET")) {
+			
+		} 
+		else if (sentence.contains("GET")) {
 			outToServer.writeBytes(sentence + '\n' + "HOST:" + server + '\n'
 					+ '\n');
 			outToServer.flush();
 			System.out.println(sentence);
 			handleResponse("GET", "HTTP/1.1");
+			
+			
 		} else if (sentence.contains("PUT")) {
 
 		} else if (sentence.contains("POST")) {
@@ -201,43 +243,88 @@ class TCPClient {
 	 */
 	private void handleResponse(String Method, String Protocol) {
 		try {
-			String response = inFromServer.readLine();
-			String fullResponse = "";
-			while (inFromServer.ready()) {
-				
-				response = inFromServer.readLine();
-				fullResponse += "\n" + response;
+			
+			if(Protocol == "HTTP/1.0"){
+				String response = inFromServer.readLine();
+				String fullResponse = "";
+				while (inFromServer.ready()) {
 
-			}
-			System.out.println("OK");
-			switch (Method) {
-			case "HEAD":
+					response = inFromServer.readLine();
+					fullResponse += "\n" + response;
 
-				System.out.println(fullResponse);
-				break;
+				}
+				System.out.println("OK");
+				switch (Method) {
+				case "HEAD":
 
-			case "GET":
-				
+					System.out.println(fullResponse);
+					break;
 
-				System.out.println(fullResponse);
-				ArrayList<String> imgLink = getImgLinks(fullResponse);
-				closeConnection();
-				for(String s : imgLink){
-					openConnection();
-					getMethod(s, true, "1.0");
+				case "GET":
+
+
+					System.out.println(fullResponse);
+					ArrayList<String> imgLink = getImgLinks(fullResponse);
 					closeConnection();
+					for(String s : imgLink){
+						openConnection();
+						getMethod(s, true, "1.0");
+						closeConnection();
 					}
-				
-				break;
 
+					break;
+
+				}
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			if(Protocol == "HTTP/1.1"){
+				
+				switch (Method) {
+				case "HEAD":
+					String response = inFromServer.readLine();
+					String fullResponse = "";
+					while (inFromServer.ready()) {
+
+						response = inFromServer.readLine();
+						fullResponse += "\n" + response;
+
+					}
+
+					System.out.println(fullResponse);
+					break;
+
+				case "GET":
+					String response1 = inFromServer.readLine();
+					String fullResponse1 = "";
+					while (inFromServer.ready()) {
+						response1 = inFromServer.readLine();
+						fullResponse1 += "\n" + response1;
+
+					}
+
+					System.out.println(fullResponse1);
+					ArrayList<String> imgLink = getImgLinks(fullResponse1);
+					for(String s : imgLink){
+						
+						getMethod(s, true, "1.1");
+					}
+
+					break;
+
+				}
+				
+			}
+			}
+			
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 
-	}
+	
+
 	
 	private ArrayList<String> getImgLinks(String html){
 		Pattern p = Pattern.compile("<img src=\"'(.*?)'\"");
