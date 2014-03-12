@@ -166,6 +166,7 @@ class TCPClient {
 					 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(name[(name.length-1)])); 
 					 int i = 0;  
 					    while ((i = inFromServer.read()) != -1) {  
+					    	
 					        out.write(i);  
 					    }  
 					    out.flush();  
