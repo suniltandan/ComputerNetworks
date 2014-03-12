@@ -112,7 +112,7 @@ class TCPClient {
 			handleResponse("HEAD", Protocol);
 		} else if (sentence.contains("GET")) {
 			
-			getMethod(s[2], false, Protocol);
+			getMethod(s[1], false, Protocol);
 			handleResponse("GET", Protocol);
 
 		} else if (sentence.contains("PUT")) {
