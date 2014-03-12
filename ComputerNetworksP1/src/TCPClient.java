@@ -1,8 +1,11 @@
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 import test.HttpTester;
 
@@ -148,24 +151,36 @@ class TCPClient {
 					String response = inFromServer.readLine();
 					String fullResponse = "";
 					boolean bodystarted =false;
-					while (inFromServer.ready()){
+					while (!bodystarted){
+						response=inFromServer.readLine();
 						if(response.isEmpty())
 							bodystarted=true;
-						if(bodystarted)
-							fullResponse+=fullResponse;
-						response=inFromServer.readLine();
-						
+	
 					}
-					System.out.print(fullResponse);
-//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
-					byte[] b = fullResponse.getBytes();
-
-
-					//slaag image op
+					
+//					BufferedImage image = ImageIO.read(this.clientSocket.getInputStream());
+//					String[] name = url.split("/");
+//					ImageIO.write(image, "name", new FileOutputStream(name[(name.length-1)]));
+					
 					String[] name = url.split("/");
-					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
-					fos.write(b);
-					fos.close();
+					 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(name[(name.length-1)])); 
+					 int i = 0;  
+					    while ((i = inFromServer.read()) != -1) {  
+					        out.write(i);  
+					    }  
+					    out.flush();  
+					   
+					    out.close(); 
+					
+//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+//					byte[] b = fullResponse.getBytes();
+//
+//
+//					//slaag image op
+//					String[] name = url.split("/");
+//					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
+//					fos.write(b);
+//					fos.close();
 				}
 			
 		}
@@ -271,7 +286,7 @@ class TCPClient {
 				case "GET":
 
 
-//					System.out.println(fullResponse);
+				System.out.println(fullResponse);
 					ArrayList<String> imgLink = getImgLinks(fullResponse);
 					closeConnection();
 					for(String s : imgLink){
