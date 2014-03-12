@@ -156,11 +156,8 @@ class TCPClient {
 
 
 					//slaag image op
-					String[] s = url.split("\\.");
-					System.out.println(s[1]);
 					String[] name = url.split("/");
-					
-					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]+"."+s[1]);
+					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
 					fos.write(b);
 					fos.close();
 				}

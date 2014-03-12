@@ -240,6 +240,14 @@ class Handler implements Runnable {
 				}
 			}
 		} else if (httpMethod.equals("PUT")) {
+			File textFile = new File("PutFrom"+connectedClient.getPort()+".txt");
+			textFile.createNewFile();
+			FileOutputStream fout = new FileOutputStream(textFile);
+			fout.write(body.getBytes());
+			fout.flush();
+			fout.close();
+			sendResponse(200, textFile.getName(), true);
+			System.out.println("Response sent to put method");
 
 		} else if (httpMethod.equals("POST")) {
 			File textFile = new File("PostFrom"+connectedClient.getPort()+".txt");
