@@ -361,6 +361,7 @@ class Handler implements Runnable {
 					+ Integer.toString(fin.available()) + "\r\n";
 			if (!fileName.endsWith(".htm") && !fileName.endsWith(".html"))
 				contentTypeLine = "Content-Type: \r\n";
+			
 		} else {
 			responseString = HTML_START + responseString + HTML_END;
 			contentLengthLine = "Content-Length: " + responseString.length()
@@ -374,8 +375,11 @@ class Handler implements Runnable {
 		outToClient.writeBytes("Connection: close\r\n");
 		outToClient.writeBytes("\r\n");
 
-		if (isFile)
+		if (isFile){
 			sendFile(fin, outToClient);
+			 byte imageData[] = new byte[Integer.parseInt(Integer.toString(fin.available()))];
+		
+		}
 		else
 			outToClient.writeBytes(responseString);
 
