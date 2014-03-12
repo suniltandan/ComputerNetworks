@@ -132,7 +132,7 @@ class TCPClient {
 	private void getMethod(String url, boolean isFile, String Protocol) throws IOException{
 		if(Protocol == "HTTP/1.0"){
 
-			if(!isFile){
+			
 
 				if(!isFile){
 					outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
@@ -156,11 +156,11 @@ class TCPClient {
 
 
 					//slaag image op
-					FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
+					FileOutputStream fos = new FileOutputStream("./webimg/" +url);
 					fos.write(b);
 					fos.close();
 				}
-			}
+			
 		}
 		
 		//HTTP 1.1 :
