@@ -141,7 +141,7 @@ class TCPClient {
 
 				if(isFile){
 					//stuur GET request naar server
-					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' + '\n' +"Host:" + server+ '\n');
+					outToServer.writeBytes("GET" + " /" +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
 					outToServer.flush();
 					// verwerk response
 
@@ -156,7 +156,11 @@ class TCPClient {
 
 
 					//slaag image op
-					FileOutputStream fos = new FileOutputStream("./webimg/" +url);
+					String[] s = url.split("\\.");
+					System.out.println(s[1]);
+					String[] name = url.split("/");
+					
+					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]+"."+s[1]);
 					fos.write(b);
 					fos.close();
 				}
@@ -246,6 +250,7 @@ class TCPClient {
 			
 			if(Protocol == "HTTP/1.0"){
 				String response = inFromServer.readLine();
+				System.out.println(response);
 				String fullResponse = "";
 				while (inFromServer.ready()) {
 
@@ -263,12 +268,12 @@ class TCPClient {
 				case "GET":
 
 
-					System.out.println(fullResponse);
+//					System.out.println(fullResponse);
 					ArrayList<String> imgLink = getImgLinks(fullResponse);
 					closeConnection();
 					for(String s : imgLink){
 						openConnection();
-						getMethod(s, true, "1.0");
+						getMethod(s, true, "HTTP/1.0");
 						closeConnection();
 					}
 
@@ -327,7 +332,7 @@ class TCPClient {
 
 	
 	private ArrayList<String> getImgLinks(String html){
-		Pattern p = Pattern.compile("<img src=\"'(.*?)'\"");
+		Pattern p = Pattern.compile("<img src=\"(.*?)\"");
 		Matcher m = p.matcher(html);
 		Matcher m2 ;
 		Pattern p2 = Pattern.compile("(\")(.*)(\")");
