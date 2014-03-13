@@ -97,7 +97,7 @@ class TCPClient {
 	 * @throws IOException
 	 */
 	private void handleHTTP10(String sentence) throws IOException {
-		
+
 		String Protocol = "HTTP/1.0";
 		String[] s = sentence.split(" ");
 		if (s.length != 3) {
@@ -111,18 +111,24 @@ class TCPClient {
 			outToServer.flush();
 			handleResponse("HEAD", Protocol);
 		} else if (sentence.contains("GET")) {
-			
+
 			getMethod(s[1], false, Protocol);
 			handleResponse("GET", Protocol);
 
 		} else if (sentence.contains("PUT")) {
+
+			System.out.print("geef content");
+			String content = inFromUser.readLine();
+			int length = content.length();
+			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
+					+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
 
 		} else if (sentence.contains("POST")) {
 			System.out.print("geef content");
 			String content = inFromUser.readLine();
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
-			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+					+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
 
 		} else {
 			System.out.println("Wrong HTTPCommand");
@@ -132,21 +138,81 @@ class TCPClient {
 	private void getMethod(String url, boolean isFile, String Protocol) throws IOException{
 		if(Protocol == "HTTP/1.0"){
 
-			
+
+
+			if(!isFile){
+				outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
+				outToServer.flush();
+			}
+
+			if(isFile){
+				//stuur GET request naar server
+				outToServer.writeBytes("GET" + " /" +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
+				outToServer.flush();
+				// verwerk response
+
+				try {
+					Thread.sleep(15);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				String response = inFromServer.readLine();
+				String fullResponse = "";
+				boolean bodystarted =false;
+				while (!bodystarted){
+					response=inFromServer.readLine();
+					if(response.isEmpty())
+						bodystarted=true;
+
+				}
+
+				//					BufferedImage image = ImageIO.read(this.clientSocket.getInputStream());
+				//					String[] name = url.split("/");
+				//					ImageIO.write(image, "name", new FileOutputStream(name[(name.length-1)]));
+
+				String[] name = url.split("/");
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(name[(name.length-1)])); 
+				int i = 0;  
+				while ((i = inFromServer.read()) != -1) {  
+
+					out.write(i);  
+				}  
+				out.flush();  
+
+				out.close(); 
+
+				//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+				//					byte[] b = fullResponse.getBytes();
+				//
+				//
+				//					//slaag image op
+				//					String[] name = url.split("/");
+				//					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
+				//					fos.write(b);
+				//					fos.close();
+			}
+
+		}
+
+		//HTTP 1.1 :
+		else{
 
 				if(!isFile){
-					outToServer.writeBytes("GET"+" "+url+" "+Protocol+ '\n' + '\n');
+					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
 					outToServer.flush();
 				}
 
 				if(isFile){
+					String[] name = url.split("/");
+					System.out.println("getting image " + url);
 					//stuur GET request naar server
 					outToServer.writeBytes("GET" + " /" +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
 					outToServer.flush();
 					// verwerk response
 
 					try {
-						Thread.sleep(15);
+						Thread.sleep(50);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -154,75 +220,52 @@ class TCPClient {
 					String response = inFromServer.readLine();
 					String fullResponse = "";
 					boolean bodystarted =false;
-					while (!bodystarted){
-						response=inFromServer.readLine();
-						if(response.isEmpty())
-							bodystarted=true;
+					String contentLength ="";
+					String body= "";
+					while (inFromServer.ready() && !bodystarted) {
+						System.out.println(response);
+						response = inFromServer.readLine();
 	
+						if(response.toLowerCase().contains("content-length"))
+							contentLength = response;
+				
+						if (response.isEmpty())
+							bodystarted = true;
+
 					}
+					String[] s= contentLength.split(": ");
+					int length = Integer.parseInt(s[1]);
+					char[] charArray = new char[length];
+					inFromServer.read(charArray);
+					body = new String(charArray);
 					
-//					BufferedImage image = ImageIO.read(this.clientSocket.getInputStream());
-//					String[] name = url.split("/");
-//					ImageIO.write(image, "name", new FileOutputStream(name[(name.length-1)]));
+					//					BufferedImage image = ImageIO.read(this.clientSocket.getInputStream());
+					//					String[] name = url.split("/");
+					//					ImageIO.write(image, "name", new FileOutputStream(name[(name.length-1)]));
+
 					
-					String[] name = url.split("/");
-					 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(name[(name.length-1)])); 
-					 int i = 0;  
-					    while ((i = inFromServer.read()) != -1) {  
-					    	
-					        out.write(i);  
-					    }  
-					    out.flush();  
-					   
-					    out.close(); 
-					
-//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
-//					byte[] b = fullResponse.getBytes();
-//
-//
-//					//slaag image op
-//					String[] name = url.split("/");
-//					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
-//					fos.write(b);
-//					fos.close();
+					BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(name[(name.length-1)])); 
+					out.write(body.getBytes());
+					out.flush();
+
+					out.close(); 
+
+					//					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
+					//					byte[] b = fullResponse.getBytes();
+					//
+					//
+					//					//slaag image op
+					//					String[] name = url.split("/");
+					//					FileOutputStream fos = new FileOutputStream(name[(name.length-1)]);
+					//					fos.write(b);
+					//					fos.close();
 				}
+
 			
 		}
-		
-		//HTTP 1.1 :
-		else{
-			if(!isFile){
 
-				if(!isFile){
-					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
-					outToServer.flush();
-				}
-
-				if(isFile){
-					//stuur GET request naar server
-					outToServer.writeBytes("GET" + " " +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
-					outToServer.flush();
-					// verwerk response
-
-					String response = inFromServer.readLine();
-					String fullResponse = "";
-					while ((response=inFromServer.readLine())!=null){
-						fullResponse += "\n"+response;
-					}
-					System.out.print(fullResponse);
-					fullResponse = fullResponse.replaceAll("(.*?)(\\n)", "");
-					byte[] b = fullResponse.getBytes();
-
-
-					//slaag image op
-					FileOutputStream fos = new FileOutputStream("C://computernetworks/" +url);
-					fos.write(b);
-					fos.close();
-				}
-
-			}
-		}
 	}
+
 
 	/**
 	 * 
@@ -263,6 +306,13 @@ class TCPClient {
 			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
 
 		} else if (sentence.contains("POST")) {
+			
+			System.out.print("geef content" + '\n');
+			String content = inFromUser.readLine();
+			int length = content.length();
+			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
+			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+
 
 		}
 
@@ -314,7 +364,7 @@ class TCPClient {
 			if(Protocol == "HTTP/1.1"){
 				String response = inFromServer.readLine();
 				String fullResponse = "";
-				while (inFromServer.ready()) {
+				while (inFromServer.ready()){
 
 					response = inFromServer.readLine();
 					fullResponse += "\n" + response;
@@ -342,7 +392,8 @@ class TCPClient {
 				}
 				
 			}
-			}
+			
+		}
 			
 			catch (Exception e) {
 				// TODO Auto-generated catch block
