@@ -1,13 +1,9 @@
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.imageio.ImageIO;
-
-import test.HttpTester;
 
 class TCPClient {
 	public static void main(String argv[]) throws Exception {
@@ -101,6 +97,7 @@ class TCPClient {
 	 * @throws IOException
 	 */
 	private void handleHTTP10(String sentence) throws IOException {
+		
 		String Protocol = "HTTP/1.0";
 		String[] s = sentence.split(" ");
 		if (s.length != 3) {
@@ -148,6 +145,12 @@ class TCPClient {
 					outToServer.flush();
 					// verwerk response
 
+					try {
+						Thread.sleep(15);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					String response = inFromServer.readLine();
 					String fullResponse = "";
 					boolean bodystarted =false;
@@ -227,6 +230,7 @@ class TCPClient {
 	 * @throws IOException
 	 */
 	private void handleHTTP11(String sentence) throws IOException {
+		String Protocol = "HTTP/1.1";
 		String[] s = sentence.split(" ");
 		if (s.length != 3) {
 			System.out
@@ -243,14 +247,20 @@ class TCPClient {
 			
 		} 
 		else if (sentence.contains("GET")) {
-			outToServer.writeBytes(sentence + '\n' + "HOST:" + server + '\n'
-					+ '\n');
-			outToServer.flush();
-			System.out.println(sentence);
+//			outToServer.writeBytes(sentence + '\n' + "HOST:" + server + '\n'
+//					+ '\n');
+//			outToServer.flush();
+//			System.out.println(sentence);
+			getMethod(s[1], false, Protocol);
 			handleResponse("GET", "HTTP/1.1");
 			
 			
 		} else if (sentence.contains("PUT")) {
+			System.out.print("geef content" + '\n');
+			String content = inFromUser.readLine();
+			int length = content.length();
+			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
+			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
 
 		} else if (sentence.contains("POST")) {
 
@@ -266,7 +276,7 @@ class TCPClient {
 	 */
 	private void handleResponse(String Method, String Protocol) {
 		try {
-			
+			Thread.sleep(15);
 			if(Protocol == "HTTP/1.0"){
 				String response = inFromServer.readLine();
 				System.out.println(response);
@@ -302,35 +312,29 @@ class TCPClient {
 			}
 			
 			if(Protocol == "HTTP/1.1"){
+				String response = inFromServer.readLine();
+				String fullResponse = "";
+				while (inFromServer.ready()) {
+
+					response = inFromServer.readLine();
+					fullResponse += "\n" + response;
+
+				}
 				
 				switch (Method) {
 				case "HEAD":
-					String response = inFromServer.readLine();
-					String fullResponse = "";
-					while (inFromServer.ready()) {
-
-						response = inFromServer.readLine();
-						fullResponse += "\n" + response;
-
-					}
+					
 
 					System.out.println(fullResponse);
 					break;
 
 				case "GET":
-					String response1 = inFromServer.readLine();
-					String fullResponse1 = "";
-					while (inFromServer.ready()) {
-						response1 = inFromServer.readLine();
-						fullResponse1 += "\n" + response1;
 
-					}
-
-					System.out.println(fullResponse1);
-					ArrayList<String> imgLink = getImgLinks(fullResponse1);
+					System.out.println(fullResponse);
+					ArrayList<String> imgLink = getImgLinks(fullResponse);
 					for(String s : imgLink){
 						
-						getMethod(s, true, "1.1");
+						getMethod(s, true, "HTTP/1.1");
 					}
 
 					break;
@@ -340,7 +344,7 @@ class TCPClient {
 			}
 			}
 			
-			catch (IOException e) {
+			catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
