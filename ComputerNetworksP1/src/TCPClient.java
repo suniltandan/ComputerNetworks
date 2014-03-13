@@ -6,26 +6,82 @@ import java.util.regex.Pattern;
 
 
 class TCPClient {
-	public static void main(String argv[]) throws Exception {
+	public static void main(String argv[]){
+		try{
 		BufferedReader input = new BufferedReader(new InputStreamReader(
 				System.in));
 		boolean read = false;
-		String server = "";
-		int port = 0;
-		while (!read) {
-			try {
-				System.out
-						.println("Enter connection server and port: \nFormat: <server> <port>");
-				String[] serverPort = input.readLine().split(" ");
-				server = serverPort[0];
-				port = Integer.parseInt(serverPort[1]);
-				read = true;
-			} catch (Exception exp) {
-				System.out.println("Wrong Fromat!");
+		String uri = "";
+		String server="";
+		String resourse="";
+		String HTTPCommand = "";
+		String HTTPversion = "";
+		int port = 80;
+		if(argv.length == 4){
+			uri = argv[1];
+			HTTPCommand = argv[0];
+			HTTPversion = argv[3];
+			port = Integer.parseInt(argv[2]);
+			
+			
+		}
+		else if(argv.length == 3){
+			uri = argv[1];
+			HTTPCommand = argv[0];
+			HTTPversion = argv[2];
+		}
+		else{
+			System.out.println("Bad Format");
+			return;
+		}
+		
+		String[] serverarray = uri.split("/");
+		if(serverarray[0].toLowerCase().equals("http:")){
+			server = serverarray[1];
+			if(serverarray.length>2){
+				for(int i = 2; i<serverarray.length;i++){
+					resourse +=("/" + serverarray[i]);
+				}
+			}
+			if(serverarray.length==2){
+				resourse ="/";
 			}
 		}
-		TCPClient client1 = new TCPClient(server, port);
-		client1.startClient();
+		else{
+			server= serverarray[0];
+			if(serverarray.length>1){
+				for(int i = 1; i<serverarray.length;i++){
+					resourse +=("/" + serverarray[i]);
+				}
+			}
+			if(serverarray.length==1){
+				resourse ="/";
+			}
+		}
+		
+		
+		if(HTTPversion.equals("1.0")|| HTTPversion.equals("HTTP/1.0")){
+			HTTPversion = "HTTP/1.0";
+		}
+		else if (HTTPversion.equals("1.1")|| HTTPversion.equals("HTTP/1.1")){
+			HTTPversion = "HTTP/1.1";
+		}
+		else {
+			System.out.println("could not detect HTTP/version");
+			return;
+		}
+		if(HTTPCommand.equals("GET")||HTTPCommand.equals("PUT")||HTTPCommand.equals("POST")||HTTPCommand.equals("HEAD")){
+			TCPClient client1 = new TCPClient(server, port);
+			client1.startClient(HTTPCommand,resourse, HTTPversion);
+		}
+		else {
+			System.out.println("command not implemented");
+		}
+
+		}
+		catch(NumberFormatException e){
+			System.out.println("Could not parse port;");
+		}
 
 	}
 
@@ -42,11 +98,9 @@ class TCPClient {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public TCPClient(String server, Integer port) throws UnknownHostException,
-			IOException {
+	public TCPClient(String server, Integer port){
 		this.server = server;
 		this.port = port;
-		
 		this.inFromUser = new BufferedReader(new InputStreamReader(System.in));
 		
 	}
@@ -73,22 +127,44 @@ class TCPClient {
 
 	/**
 	 * 
+	 * @param hTTPversion 
+	 * @param hTTPCommand 
+	 * @param hTTPversion2 
 	 * @throws IOException
 	 */
-	public void startClient() throws IOException {
-		openConnection();
-
-		while (!closeConnection) {
-			String sentence = inFromUser.readLine();
-			if (sentence.contains("HTTP/1.0")) {
-				handleHTTP10(sentence);
-				closeConnection = true;
-			} else if (sentence.contains("HTTP/1.1")) {
-				handleHTTP11(sentence);
-			} else {
-				System.out.println("Wrong Format");
+	public void startClient(String hTTPCommand, String resource, String hTTPversion){
+		try {
+			openConnection();
+			String sentence = hTTPCommand + " "+ resource + " " + hTTPversion ;
+			while (!closeConnection) {
+				
+				if (sentence.contains("HTTP/1.0")) {
+					handleHTTP10(sentence);
+					System.out.println("HTTP/1.0, connection closed.");
+					closeConnection = true;
+				} else if (sentence.contains("HTTP/1.1")) {
+					handleHTTP11(sentence);
+					if(!closeConnection){
+					System.out.println("HTTP/1.1 connection is still open, type http request");
+					sentence = inFromUser.readLine();
+					}
+					
+				} else {
+					System.out.println("Wrong Format");
+					System.out.println("HTTP/1.1 connection is still open, type http request");
+					sentence = inFromUser.readLine();
+				}
 			}
+			closeConnection();
+		} catch (UnknownHostException e) {
+			System.out.println("could not connect to host");
+			return;
+		
+		} catch (IOException e) {
+			System.out.println("connection closed");
 		}
+
+	
 	}
 
 	/**
@@ -122,6 +198,8 @@ class TCPClient {
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
 					+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+			
+			handleResponse("HEAD", Protocol);
 
 		} else if (sentence.contains("POST")) {
 			System.out.print("geef content");
@@ -129,6 +207,8 @@ class TCPClient {
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
 					+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+			
+			handleResponse("HEAD", Protocol);
 
 		} else {
 			System.out.println("Wrong HTTPCommand");
@@ -146,6 +226,7 @@ class TCPClient {
 			}
 
 			if(isFile){
+				System.out.println("getting image " + url);
 				//stuur GET request naar server
 				outToServer.writeBytes("GET" + " /" +url+ " "+Protocol+ '\n' +"Host:" + server+ '\n' + '\n');
 				outToServer.flush();
@@ -168,7 +249,7 @@ class TCPClient {
 				}
 
 				//					BufferedImage image = ImageIO.read(this.clientSocket.getInputStream());
-				//					String[] name = url.split("/");
+				//				G	String[] name = url.split("/");
 				//					ImageIO.write(image, "name", new FileOutputStream(name[(name.length-1)]));
 
 				String[] name = url.split("/");
@@ -223,7 +304,7 @@ class TCPClient {
 					String contentLength ="";
 					String body= "";
 					while (inFromServer.ready() && !bodystarted) {
-						System.out.println(response);
+						//System.out.println(response);
 						response = inFromServer.readLine();
 	
 						if(response.toLowerCase().contains("content-length"))
@@ -282,8 +363,8 @@ class TCPClient {
 			return;
 		}
 		if (sentence.contains("HEAD")) {
-			outToServer.writeBytes(sentence + '\n' + '\n' + "Host:" + server
-					+ '\n');
+			outToServer.writeBytes(sentence + '\n' + "Host:" + server
+					+ '\n' + '\n');
 			System.out.println(sentence);
 			outToServer.flush();
 			handleResponse("HEAD", "HTTP/1.1");
@@ -304,6 +385,8 @@ class TCPClient {
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
 			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+			
+			handleResponse("HEAD", "HTTP/1.1");
 
 		} else if (sentence.contains("POST")) {
 			
@@ -312,6 +395,8 @@ class TCPClient {
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
 			+ '\n' + "Content-Length: " + length + '\n'+'\n' + content + '\n'+'\n');
+			
+			handleResponse("HEAD", "HTTP/1.1");
 
 
 		}
@@ -330,7 +415,7 @@ class TCPClient {
 			if(Protocol == "HTTP/1.0"){
 				String response = inFromServer.readLine();
 				System.out.println(response);
-				String fullResponse = "";
+				String fullResponse = response;
 				while (inFromServer.ready()) {
 
 					response = inFromServer.readLine();
@@ -363,12 +448,16 @@ class TCPClient {
 			
 			if(Protocol == "HTTP/1.1"){
 				String response = inFromServer.readLine();
-				String fullResponse = "";
+				String fullResponse = response;
 				while (inFromServer.ready()){
 
 					response = inFromServer.readLine();
 					fullResponse += "\n" + response;
 
+				}
+				
+				if(fullResponse.toLowerCase().contains("connection: close")){
+					this.closeConnection = true;
 				}
 				
 				switch (Method) {
