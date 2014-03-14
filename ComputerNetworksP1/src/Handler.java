@@ -37,6 +37,7 @@ class Handler implements Runnable {
 	 */
 	public void run() {
 		try {
+			String client = connectedClient.getInetAddress()+":"+connectedClient.getPort();
 			System.out.println("The Client " + connectedClient.getInetAddress()
 					+ ":" + connectedClient.getPort() + " is connected");
 
@@ -45,11 +46,12 @@ class Handler implements Runnable {
 			outToClient = new DataOutputStream(
 					connectedClient.getOutputStream());
 			while (!closeConnection) {
-				parseRequests();
+//				parseRequests();
 				String requestString = inFromClient.readLine();
-				System.out.println(requestString);
+				
 				if (requestString == null)
 					break;
+				System.out.println("\n\n\n"+requestString);
 				String[] s = requestString.split(" ");
 				if (s.length != 3) {
 					sendResponse(400, "BAD REQUEST", false);
@@ -76,8 +78,9 @@ class Handler implements Runnable {
 			outToClient.close();
 			inFromClient.close();
 			connectedClient.close();
+			System.out.println("Connection closed with "+client);
 		} catch (Exception e) {
-		System.out.println("Connection Closed");	
+		System.out.println("Connection closed");	
 		}
 	}
 	ArrayList<String> Requests= new ArrayList<>();
@@ -170,8 +173,11 @@ class Handler implements Runnable {
 			int length = Integer.parseInt(s[1]);
 			char[] charArray = new char[length];
 			inFromClient.read(charArray);
+			while(inFromClient.ready())
+				inFromClient.read();
 			body = new String(charArray);
 			body = URLDecoder.decode(body, "UTF-8");
+		
 			}
 		System.out.println("Body:" + body);
 		// If the http1.1 request does not contain HOST header then send a bad
@@ -252,7 +258,7 @@ class Handler implements Runnable {
 			System.out.println("Response sent to post method");
 		}
 		// This is for the methods that have not yet been implemented.
-		else if (httpMethod.equals("")) {
+		else if (httpMethod.equals("DELETE")||httpMethod.equals("TRACE")||httpMethod.equals("CONNECT")||httpMethod.equals("OPTIONS")) {
 			sendResponse(500,
 					"Server Error, This kind of request is not implemented.",
 					false);
@@ -323,6 +329,7 @@ class Handler implements Runnable {
 
 		} else
 			outToClient.writeBytes(responseString +"\r\n");
+		outToClient.flush();
 
 	}
 
