@@ -49,7 +49,7 @@ class Handler implements Runnable {
 				System.out.println("\n\n\n"+requestString);
 				String[] s = requestString.split(" ");
 				if (s.length != 3) {
-					sendResponse(400, "BAD REQUEST", false);
+					sendResponse(400, "BAD REQUEST", false,false);
 					closeConnection = true;
 				} else {
 					String httpMethod = s[0];
@@ -65,7 +65,7 @@ class Handler implements Runnable {
 					// else if (Protocol.equals("HTTP/1.1"))
 					// respondHTTP11(httpMethod, httpQueryString);
 					else {
-						sendResponse(400, "BAD REQUEST", false);
+						sendResponse(400, "BAD REQUEST", false,false);
 						closeConnection = true;
 					}
 				}
@@ -147,7 +147,7 @@ class Handler implements Runnable {
 		// If the http1.1 request does not contain HOST header then send a bad
 		// request and close the connection.
 		if (Protocol.equals("HTTP/1.1") && !containsHost) {
-			sendResponse(400, "BAD REQUEST", false);
+			sendResponse(400, "BAD REQUEST", false,false);
 			closeConnection = true;
 			return;
 		}
@@ -161,7 +161,7 @@ class Handler implements Runnable {
 			if (connectionHeader.toLowerCase().contains("close"))
 				closeConnection = true;
 			else if (!connectionHeader.toLowerCase().contains("keep-alive")) {
-				sendResponse(400, "BAD REQUEST", false);
+				sendResponse(400, "BAD REQUEST", false,false);
 				closeConnection = true;
 				return;
 			}
@@ -172,7 +172,7 @@ class Handler implements Runnable {
 				closeConnection = false;
 			else if (connectionHeader != null
 					&& !connectionHeader.toLowerCase().contains("close")) {
-				sendResponse(400, "BAD REQUEST", false);
+				sendResponse(400, "BAD REQUEST", false,false);
 				closeConnection = true;
 				return;
 			}
@@ -184,20 +184,17 @@ class Handler implements Runnable {
 		if (httpMethod.equals("GET")) {
 			if (httpQueryString.equals("/")) {
 				String fileName = (htmlFolder + "index.html");
-				if (new File(fileName).isFile()) {
-					sendResponse(200, fileName, true);
-				sendResponse(200, fileName, true);
-				}
+				sendResponse(200, fileName, true,false);
 			} else {
 				// This is interpreted as a file name
 				String fileName = httpQueryString.replaceFirst("/", "");
 				fileName = (htmlFolder + fileName);
 				if (new File(fileName).isFile()) {
-					sendResponse(200, fileName, true);
+					sendResponse(200, fileName, true,false);
 				} else {
 					sendResponse(404,
 							"<b>The Requested resource not found ....</b>",
-							false);
+							false,false);
 				}
 			}
 		} else if (httpMethod.equals("PUT")) {
@@ -208,7 +205,7 @@ class Handler implements Runnable {
 			fout.write(body.getBytes());
 			fout.flush();
 			fout.close();
-			sendResponse(200, textFile.getName(), true);
+			sendResponse(200, textFile.getName(), true,false);
 			System.out.println("Response sent to put method");
 
 		} else if (httpMethod.equals("POST")) {
@@ -219,22 +216,40 @@ class Handler implements Runnable {
 			fout.write(body.getBytes());
 			fout.flush();
 			fout.close();
-			sendResponse(200, textFile.getName(), true);
+			sendResponse(200, textFile.getName(), true,false);
 			System.out.println("Response sent to post method");
+		}
+		else if (httpMethod.equals("HEAD")) {
+			if (httpQueryString.equals("/")) {
+				String fileName = (htmlFolder + "index.html");
+				sendResponse(200, fileName, true,true);
+			} else {
+				// This is interpreted as a file name
+				String fileName = httpQueryString.replaceFirst("/", "");
+				fileName = (htmlFolder + fileName);
+				if (new File(fileName).isFile()) {
+					sendResponse(200, fileName, true,false);
+				} else {
+					sendResponse(404,
+							"<b>The Requested resource not found ....</b>",
+							false,false);
+				}
+			}
 		}
 		// This is for the methods that have not yet been implemented.
 		else if (httpMethod.equals("DELETE")||httpMethod.equals("TRACE")||httpMethod.equals("CONNECT")||httpMethod.equals("OPTIONS")) {
 			sendResponse(500,
 					"Server Error, This kind of request is not implemented.",
-					false);
+					false,false);
 		}
 
 		else {
-			sendResponse(400, "BAD REQUEST", false);
+			sendResponse(400, "BAD REQUEST", false,false);
 			closeConnection = true;
 		}
 
 	}
+	
 
 	/**
 	 * Sends the response
@@ -248,7 +263,7 @@ class Handler implements Runnable {
 	 * @throws Exception
 	 */
 	private void sendResponse(int statusCode, String responseString,
-			boolean isFile) throws Exception {
+			boolean isFile, boolean isHead) throws Exception {
 
 		String statusLine = null;
 		String serverdetails = "Server: Java Awesome Server\n";
@@ -289,7 +304,7 @@ class Handler implements Runnable {
 			outToClient.writeBytes("Connection: keep-alive\r\n");
 		outToClient.writeBytes("\r\n");
 
-		if (isFile) {
+		if (isFile && !isHead) {
 			sendFile(fin, outToClient);
 
 		} else
