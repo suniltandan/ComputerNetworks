@@ -219,10 +219,11 @@ class Handler implements Runnable {
 		 */
 		if (httpMethod.equals("GET")) {
 			if (httpQueryString.equals("/")) {
-				byte[] bytes = Files.readAllBytes(Paths.get(htmlFolder
-						+ "index.html"));
-				String text = new String(bytes, StandardCharsets.UTF_8);
-				sendResponse(200, text, false);
+				String fileName = (htmlFolder + "index.html");
+				if (new File(fileName).isFile()) {
+					sendResponse(200, fileName, true);
+				sendResponse(200, fileName, true);
+				}
 			} else {
 				// This is interpreted as a file name
 				String fileName = httpQueryString.replaceFirst("/", "");

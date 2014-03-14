@@ -193,7 +193,7 @@ class TCPClient {
 
 		} else if (sentence.contains("PUT")) {
 
-			System.out.print("geef content");
+			System.out.print("Give Body\n");
 			String content = inFromUser.readLine();
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
@@ -202,7 +202,7 @@ class TCPClient {
 			handleResponse("HEAD", Protocol);
 
 		} else if (sentence.contains("POST")) {
-			System.out.print("geef content");
+			System.out.print("Give Body\n");
 			String content = inFromUser.readLine();
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
@@ -380,7 +380,7 @@ class TCPClient {
 			
 			
 		} else if (sentence.contains("PUT")) {
-			System.out.print("geef content" + '\n');
+			System.out.print("Give Body" + '\n');
 			String content = inFromUser.readLine();
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
@@ -390,7 +390,7 @@ class TCPClient {
 
 		} else if (sentence.contains("POST")) {
 			
-			System.out.print("geef content" + '\n');
+			System.out.print("Give Body" + '\n');
 			String content = inFromUser.readLine();
 			int length = content.length();
 			outToServer.writeBytes(sentence + '\n' + "HOST: " + server + "\n" + "Content-Type: text/plain"
