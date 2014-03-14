@@ -306,7 +306,7 @@ class Handler implements Runnable {
 
 		if (isFile && !isHead) {
 			sendFile(fin, outToClient);
-
+			outToClient.writeBytes("\r\n");
 		} else
 			outToClient.writeBytes(responseString +"\r\n");
 		outToClient.flush();
