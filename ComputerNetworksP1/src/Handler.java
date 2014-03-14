@@ -2,11 +2,6 @@ import java.io.*;
 
 import java.net.Socket;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 
 class Handler implements Runnable {
 	static final String HTML_START = "<html>"
@@ -81,37 +76,6 @@ class Handler implements Runnable {
 			System.out.println("Connection closed with "+client);
 		} catch (Exception e) {
 		System.out.println("Connection closed");	
-		}
-	}
-	ArrayList<String> Requests= new ArrayList<>();
-	private void parseRequests() throws Exception{
-		String requestString = inFromClient.readLine();
-		if (requestString == null){
-			closeConnection=true;
-			return;
-		}
-		System.out.println(requestString);
-		String[] s = requestString.split(" ");
-		if (s.length != 3) {
-			sendResponse(400, "BAD REQUEST", false);
-			closeConnection = true;
-		} else {
-			String httpMethod = s[0];
-			String httpQueryString = s[1];
-			httpQueryString = URLDecoder.decode(httpQueryString, "UTF-8");
-			Protocol = s[2];
-			if (Protocol.equals("HTTP/1.0")
-					|| Protocol.equals("HTTP/1.1")) {
-				respond(httpMethod, httpQueryString);
-			}
-			// if (Protocol.equals("HTTP/1.0"))
-			// respondHTTP10(httpMethod, httpQueryString);
-			// else if (Protocol.equals("HTTP/1.1"))
-			// respondHTTP11(httpMethod, httpQueryString);
-			else {
-				sendResponse(400, "BAD REQUEST", false);
-				closeConnection = true;
-			}
 		}
 	}
 

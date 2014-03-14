@@ -8,9 +8,6 @@ import java.util.regex.Pattern;
 class TCPClient {
 	public static void main(String argv[]){
 		try{
-		BufferedReader input = new BufferedReader(new InputStreamReader(
-				System.in));
-		boolean read = false;
 		String uri = "";
 		String server="";
 		String resourse="";
@@ -239,7 +236,6 @@ class TCPClient {
 					e.printStackTrace();
 				}
 				String response = inFromServer.readLine();
-				String fullResponse = "";
 				boolean bodystarted =false;
 				while (!bodystarted){
 					response=inFromServer.readLine();
@@ -299,7 +295,6 @@ class TCPClient {
 						e.printStackTrace();
 					}
 					String response = inFromServer.readLine();
-					String fullResponse = "";
 					boolean bodystarted =false;
 					String contentLength ="";
 					String body= "";
